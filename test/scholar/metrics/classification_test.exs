@@ -72,4 +72,69 @@ defmodule Scholar.Metrics.ClassificationTest do
       assert Classification.mcc(y_true, y_pred) == Nx.tensor([0.0], type: :f32)
     end
   end
+
+  describe "batching (axes)" do
+    test "accuracy without axes stays a scalar (non-breaking)" do
+      y_true = Nx.tensor([[1, 0, 0], [1, 1, 0]], type: :u32)
+      y_pred = Nx.tensor([[1, 0, 1], [1, 0, 0]], type: :u32)
+
+      acc = Classification.accuracy(y_true, y_pred)
+      assert Nx.shape(acc) == {}
+      assert_all_close(acc, Nx.tensor(4 / 6))
+    end
+
+    test "accuracy reduces per batch along the given axis" do
+      y_true = Nx.tensor([[1, 0, 0], [1, 1, 0]], type: :u32)
+      y_pred = Nx.tensor([[1, 0, 1], [1, 0, 0]], type: :u32)
+
+      assert_all_close(
+        Classification.accuracy(y_true, y_pred, axes: [1]),
+        Nx.tensor([2 / 3, 2 / 3])
+      )
+
+      assert_all_close(
+        Classification.accuracy(y_true, y_pred, axes: [0]),
+        Nx.tensor([1.0, 0.5, 0.5])
+      )
+    end
+
+    test "accuracy with normalize: false counts hits per batch" do
+      y_true = Nx.tensor([[1, 0, 0], [1, 1, 0]], type: :u32)
+      y_pred = Nx.tensor([[1, 0, 1], [1, 0, 0]], type: :u32)
+
+      assert Classification.accuracy(y_true, y_pred, axes: [1], normalize: false) ==
+               Nx.tensor([2, 2], type: :u32)
+    end
+
+    test "zero_one_loss without axes stays a scalar (non-breaking)" do
+      y_true = Nx.tensor([[1, 2, 3, 4], [1, 2, 3, 4]])
+      y_pred = Nx.tensor([[2, 2, 3, 4], [1, 2, 3, 0]])
+
+      loss = Classification.zero_one_loss(y_true, y_pred)
+      assert Nx.shape(loss) == {}
+      assert_all_close(loss, Nx.tensor(2 / 8))
+    end
+
+    test "zero_one_loss reduces per batch along the given axis" do
+      y_true = Nx.tensor([[1, 2, 3, 4], [1, 2, 3, 4]])
+      y_pred = Nx.tensor([[2, 2, 3, 4], [1, 2, 3, 0]])
+
+      assert_all_close(
+        Classification.zero_one_loss(y_true, y_pred, axes: [1]),
+        Nx.tensor([0.25, 0.25])
+      )
+
+      assert Classification.zero_one_loss(y_true, y_pred, axes: [1], normalize: false) ==
+               Nx.tensor([1, 1], type: :u32)
+    end
+
+    test "accuracy and zero_one_loss are complementary per batch" do
+      y_true = Nx.tensor([[1, 0, 0], [1, 1, 0]], type: :u32)
+      y_pred = Nx.tensor([[1, 0, 1], [1, 0, 0]], type: :u32)
+
+      acc = Classification.accuracy(y_true, y_pred, axes: [1])
+      loss = Classification.zero_one_loss(y_true, y_pred, axes: [1])
+      assert_all_close(Nx.add(acc, loss), Nx.tensor([1.0, 1.0]))
+    end
+  end
 end

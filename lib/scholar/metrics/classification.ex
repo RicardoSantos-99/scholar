@@ -23,6 +23,19 @@ defmodule Scholar.Metrics.Classification do
     ]
   ]
 
+  axes_schema = [
+    axes: [
+      type: {:custom, Scholar.Options, :axes, []},
+      doc: """
+      Axes to aggregate the metric over. By default the metric is
+      calculated over the whole tensors, returning a scalar. Set it
+      to compute the metric per batch (for example `axes: [1]` on a
+      `{num_batches, num_samples}` tensor), in the same way as the
+      regression and distance metrics.
+      """
+    ]
+  ]
+
   f1_score_schema =
     general_schema ++
       [
@@ -150,16 +163,17 @@ defmodule Scholar.Metrics.Classification do
         ]
       ]
 
-  accuracy_schema = [
-    normalize: [
-      type: :boolean,
-      default: true,
-      doc: """
-      If `true`, return the fraction of correctly classified samples.
-      Otherwise, return the number of correctly classified samples.
-      """
-    ]
-  ]
+  accuracy_schema =
+    [
+      normalize: [
+        type: :boolean,
+        default: true,
+        doc: """
+        If `true`, return the fraction of correctly classified samples.
+        Otherwise, return the number of correctly classified samples.
+        """
+      ]
+    ] ++ axes_schema
 
   log_loss_schema =
     general_schema ++
@@ -201,16 +215,17 @@ defmodule Scholar.Metrics.Classification do
         ]
       ]
 
-  zero_one_loss_schema = [
-    normalize: [
-      type: :boolean,
-      default: true,
-      doc: """
-      If `true`, return the fraction of incorrectly classified samples.
-      Otherwise, return the number of incorrectly classified samples.
-      """
-    ]
-  ]
+  zero_one_loss_schema =
+    [
+      normalize: [
+        type: :boolean,
+        default: true,
+        doc: """
+        If `true`, return the fraction of incorrectly classified samples.
+        Otherwise, return the number of incorrectly classified samples.
+        """
+      ]
+    ] ++ axes_schema
 
   @general_schema NimbleOptions.new!(general_schema)
   @confusion_matrix_schema NimbleOptions.new!(confusion_matrix_schema)
@@ -229,9 +244,13 @@ defmodule Scholar.Metrics.Classification do
 
   # Standard Metrics
 
-  @doc ~S"""
+  @doc """
   Computes the accuracy of the given predictions
   for binary and multi-class classification problems.
+
+  ## Options
+
+  #{NimbleOptions.docs(@accuracy_schema)}
 
   ## Examples
 
@@ -256,20 +275,28 @@ defmodule Scholar.Metrics.Classification do
         u32
         6
       >
+
+      iex> y_true = Nx.tensor([[1, 0, 0], [1, 1, 0]], type: :u32)
+      iex> y_pred = Nx.tensor([[1, 0, 1], [1, 0, 0]], type: :u32)
+      iex> Scholar.Metrics.Classification.accuracy(y_true, y_pred, axes: [1])
+      #Nx.Tensor<
+        f32[2]
+        [0.6666666865348816, 0.6666666865348816]
+      >
   """
   deftransform accuracy(y_true, y_pred, opts \\ []) do
     accuracy_n(y_true, y_pred, NimbleOptions.validate!(opts, @accuracy_schema))
   end
 
   defnp accuracy_n(y_true, y_pred, opts) do
-    check_shape(y_true, y_pred)
+    assert_same_shape!(y_true, y_pred)
 
     case opts[:normalize] do
       true ->
-        Nx.mean(y_pred == y_true)
+        Nx.mean(y_pred == y_true, axes: opts[:axes])
 
       false ->
-        Nx.sum(y_pred == y_true)
+        Nx.sum(y_pred == y_true, axes: opts[:axes])
     end
   end
 
@@ -888,7 +915,7 @@ defmodule Scholar.Metrics.Classification do
 
   #{NimbleOptions.docs(@zero_one_loss_schema)}
 
-  # Examples
+  ## Examples
 
       iex> y_pred = Nx.tensor([1, 2, 3, 4])
       iex> y_true = Nx.tensor([2, 2, 3, 4])
@@ -905,18 +932,28 @@ defmodule Scholar.Metrics.Classification do
         u32
         1
       >
+
+      iex> y_true = Nx.tensor([[1, 2, 3, 4], [1, 2, 3, 4]])
+      iex> y_pred = Nx.tensor([[2, 2, 3, 4], [1, 2, 3, 0]])
+      iex> Scholar.Metrics.Classification.zero_one_loss(y_true, y_pred, axes: [1])
+      #Nx.Tensor<
+        f32[2]
+        [0.25, 0.25]
+      >
   """
   deftransform zero_one_loss(y_true, y_pred, opts \\ []) do
     zero_one_loss_n(y_true, y_pred, NimbleOptions.validate!(opts, @zero_one_loss_schema))
   end
 
   defnp zero_one_loss_n(y_true, y_pred, opts) do
+    assert_same_shape!(y_true, y_pred)
+
     case opts[:normalize] do
       true ->
-        1 - accuracy(y_true, y_pred, opts)
+        Nx.mean(y_pred != y_true, axes: opts[:axes])
 
       false ->
-        Nx.axis_size(y_true, 0) - accuracy(y_true, y_pred, opts)
+        Nx.sum(y_pred != y_true, axes: opts[:axes])
     end
   end
 
