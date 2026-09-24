@@ -2,7 +2,7 @@ defmodule Scholar.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/elixir-nx/scholar"
-  @version "0.4.2"
+  @version "0.5.0"
 
   def project do
     [
@@ -76,10 +76,15 @@ defmodule Scholar.MixProject do
           Scholar.Cluster.MeanShift,
           Scholar.Cluster.OPTICS,
           Scholar.Cluster.SpectralClustering,
+          Scholar.Covariance.LedoitWolf,
+          Scholar.Covariance.ShrunkCovariance,
+          Scholar.CrossDecomposition.PLSSVD,
           Scholar.Decomposition.KernelPCA,
           Scholar.Decomposition.PCA,
+          Scholar.Decomposition.TruncatedSVD,
           Scholar.DiscriminantAnalysis.Linear,
           Scholar.DiscriminantAnalysis.Quadratic,
+          Scholar.FeatureExtraction.CountVectorizer,
           Scholar.Integrate,
           Scholar.Interpolation.BezierSpline,
           Scholar.Interpolation.CubicSpline,
@@ -95,6 +100,8 @@ defmodule Scholar.MixProject do
           Scholar.Manifold.MDS,
           Scholar.Manifold.Trimap,
           Scholar.Manifold.TSNE,
+          Scholar.NaiveBayes.Bernoulli,
+          Scholar.NaiveBayes.Categorical,
           Scholar.NaiveBayes.Complement,
           Scholar.NaiveBayes.Gaussian,
           Scholar.NaiveBayes.Multinomial,
@@ -106,9 +113,14 @@ defmodule Scholar.MixProject do
           Scholar.Neighbors.NNDescent,
           Scholar.Neighbors.RadiusNNClassifier,
           Scholar.Neighbors.RadiusNNRegressor,
-          Scholar.Neighbors.RandomProjectionForest
+          Scholar.Neighbors.RandomProjectionForest,
+          Scholar.Optimize.BFGS,
+          Scholar.Optimize.Brent,
+          Scholar.Optimize.GoldenSection,
+          Scholar.Optimize.NelderMead
         ],
         Utilities: [
+          Scholar.Impute.KNNImputter,
           Scholar.Impute.SimpleImputer,
           Scholar.Metrics.Classification,
           Scholar.Metrics.Clustering,
@@ -119,11 +131,13 @@ defmodule Scholar.MixProject do
           Scholar.Metrics.Similarity,
           Scholar.ModelSelection,
           Scholar.Preprocessing,
+          Scholar.Preprocessing.Binarizer,
           Scholar.Preprocessing.MaxAbsScaler,
           Scholar.Preprocessing.MinMaxScaler,
           Scholar.Preprocessing.Normalizer,
           Scholar.Preprocessing.OneHotEncoder,
           Scholar.Preprocessing.OrdinalEncoder,
+          Scholar.Preprocessing.RobustScaler,
           Scholar.Preprocessing.StandardScaler,
           Scholar.Stats
         ]

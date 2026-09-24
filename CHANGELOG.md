@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.5.0 (2026-09-24)
+
+  * Require Nx `~> 1.0`
+  * Add `Scholar.Cluster.HDBSCAN`, `Scholar.Cluster.MeanShift`, and `Scholar.Cluster.SpectralClustering`
+  * Add `Scholar.Decomposition.KernelPCA`
+  * Add `Scholar.DiscriminantAnalysis.Linear` and `Scholar.DiscriminantAnalysis.Quadratic`
+  * Add `Scholar.Interpolation.MonotonicCubicSpline`
+  * Add Ward linkage and support for precomputed dissimilarities to hierarchical clustering
+  * Expose the reachability graph in `Scholar.Cluster.OPTICS`
+  * Improve hierarchical clustering stability and speed up KNN neighbor search
+  * Fix precision loss and overflow in pairwise squared Euclidean distances
+  * Fix prediction and option handling in Naive Bayes classifiers
+  * Fix issues in Bayesian ridge regression, isotonic regression, Trimap, linear interpolation, KNN imputation, and standard scaling
+  * Fix `confusion_matrix` with tensor sample weights and mean Tweedie deviance for other power values
+
 ## v0.4.2 (2026-07-10)
 
   * Reduce K-means memory from `O(n·k·d)` to `O(n·k)` and fix empty cluster NaN
